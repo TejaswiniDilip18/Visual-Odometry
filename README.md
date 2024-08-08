@@ -35,13 +35,15 @@ make
 ```sh
 ./vo
 ```
-4. The program will display the estimated trajectory and save it to `trajectory.txt`.
+4. The program will display the estimated trajectory and save it to `trajectory.png`.
 
 ## Results
 
+The estimated trajectory is shown below.
 [![Trajectory](results/trajectory.png)](results/trajectory.png)
 
-[![Demo Video](results/visual_odometry.gif)](results/visual_odometry.gif)
+Demo video is shown below:
+[![Demo Video](results/visual_odometry.mp4)](results/visual_odometry.mp4)
 
 ## Acknowledgements
 The code is inspired from the following sources:
