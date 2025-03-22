@@ -75,6 +75,7 @@ The estimated trajectory is shown below.
 [![Trajectory](results/trajectory.png)](results/trajectory.png)
 
 Demo video is shown below:
+
 [![Demo Video](results/visual_odometry.gif)](results/visual_odometry.gif)
 
 ## Acknowledgements
