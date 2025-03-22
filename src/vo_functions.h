@@ -3,6 +3,8 @@
 #include <vector>
 #include <ctype.h>
 #include <fstream>
+// #include <eigen3/Eigen/Dense>
+#include <vector>
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -12,6 +14,28 @@
 #include "constants.h" // Include constants header with ellipsoid definitions
 
 using namespace std;
+
+struct Pose {
+    double x, y, z;
+    Pose(double x, double y, double z) : x(x), y(y), z(z) {}
+};
+
+double calculateATE(const std::vector<Pose>& estimated_trajectory, const std::vector<Pose>& ground_truth_trajectory) {
+    if (estimated_trajectory.size() != ground_truth_trajectory.size()) {
+        std::cerr << "Trajectory sizes do not match!" << std::endl;
+        return -1;
+    }
+
+    double ate_sum = 0;
+    for (size_t i = 0; i < estimated_trajectory.size(); ++i) {
+        double dx = estimated_trajectory[i].x - ground_truth_trajectory[i].x;
+        double dy = estimated_trajectory[i].y - ground_truth_trajectory[i].y;
+        double dz = estimated_trajectory[i].z - ground_truth_trajectory[i].z;
+        ate_sum += std::sqrt(dx*dx + dy*dy + dz*dz);
+    }
+
+    return ate_sum / estimated_trajectory.size();
+}
 
 // Function to detect features in an image using Shi-Tomasi Corner Detector (Good Features to Track)
 void feature_detection(const cv::Mat& img, std::vector<cv::Point2f>& points) {

@@ -1,0 +1,3 @@
+dataset_path: ../dataset/2011_10_03_drive_0027_sync/2011_10_03/2011_10_03_drive_0027_sync
+oxts_data_path: ../dataset/2011_10_03_drive_0027_sync/2011_10_03/2011_10_03_drive_0027_sync/oxts/data
+true_pose_path: ../dataset/data_odometry_poses/dataset/poses/00.txt

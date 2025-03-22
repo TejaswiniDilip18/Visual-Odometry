@@ -9,15 +9,24 @@ This project implements a monocular visual odometry system designed to work with
 - Scale estimation using GPS data
 - Visualization of estimated trajectory
 
-## Installation
+## Getting Started
 
-1. Clone this repository:
+Before running the project, clone the repository:
 ```sh
 git clone https://github.com/TejaswiniDilip18/Visual-Odometry.git
 cd Visual-Odometry/
 ```
 
-2. Create a build directory and compile:
+### Dataset
+
+1. Download the KITTI odometry dataset from [KITTI website](http://www.cvlibs.net/datasets/kitti/eval_odometry.php).
+
+2. Update the dataset paths in the config.yaml file.
+
+Now, you can either build and run with CMake or use Docker.
+
+## Method 1: Running with CMake:
+1. Create a build directory and compile.
 ```sh
 mkdir build
 cd build
@@ -25,17 +34,40 @@ cmake ..
 make
 ```
 
-## Usage
-
-1. Download the KITTI odometry dataset from [KITTI website](http://www.cvlibs.net/datasets/kitti/eval_odometry.php).
-
-2. Change dataset path, GPS data path and ground truth data wherever necessary in the vo_main.cpp file.
-
-3. Run the visual odometry:
+2. Run the visual odometry:
 ```sh
 ./vo
 ```
-4. The program will display the estimated trajectory and save it to `trajectory.png`.
+
+3. The program will display the estimated trajectory and save it to `trajectory.png`.
+
+## Running with Docker
+You can use Docker to containerize and run this project without manually installing dependencies.
+
+1. Build the Docker Image
+```sh
+docker build . -t vo_image
+```
+
+2. Enable X11 access for GUI applications (for trajectory visualization)
+```sh
+xhost +local:docker
+```
+
+3. Run the Container
+```sh
+docker run --rm -it \
+    -e DISPLAY=$DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -v /path/to/dataset:/dataset \
+    --name vo_container \
+    vo_image
+```
+
+4. (Optional) Restore security after running Docker
+```sh
+xhost -local:root
+```
 
 ## Results
 

@@ -7,11 +7,11 @@
 #include <ctime>
 #include <opencv2/opencv.hpp>
 #include "vo_functions.h"
+#include <yaml-cpp/yaml.h>
 
 using namespace std;
 
 // Define constants
-#define MAX_FRAME 4544
 #define MIN_NUM_FEAT 2000
 
 int main(){
@@ -25,10 +25,13 @@ int main(){
     int thickness = 1;  
     cv::Point textOrg(10, 50);
 
-    // Change path to your dataset location
-    string folder_path = "/home/tejaswini/Projects/Visual_Odometry/2011_10_03_drive_0027_sync/2011_10_03/2011_10_03_drive_0027_sync";
-    string oxts_data = folder_path + "/oxts/data";
-    string true_pose = "/home/tejaswini/Projects/Visual_Odometry/data_odometry_poses/dataset/poses/00.txt";
+    // Load YAML config file
+    YAML::Node config = YAML::LoadFile("../config.yaml");
+
+    // Extract paths
+    string folder_path = config["dataset_path"].as<string>();
+    string oxts_data = config["oxts_data_path"].as<string>();
+    string true_pose = config["true_pose_path"].as<string>();
 
     char filename1[200];
     char filename2[200];
@@ -79,9 +82,16 @@ int main(){
 
     cv::Mat traj = cv::Mat::zeros(820, 950, CV_8UC3);
 
-    for(int numFrame = 2; numFrame < MAX_FRAME; numFrame++){
+    std::vector<Pose> estimated_trajectory;
+    std::vector<Pose> ground_truth_trajectory;
+
+    int numFrame = 2;
+    while(true){
         sprintf(filename, "%s/image_02/data/%010d.png", folder_path.c_str(), numFrame); // image path
         cv::Mat currImage_c = cv::imread(filename);
+        if(currImage_c.empty()){
+            break;
+        }
         cv::cvtColor(currImage_c, currImage, cv::COLOR_BGR2GRAY);
         
         vector<uchar> status;
@@ -89,17 +99,6 @@ int main(){
 
         E = findEssentialMat(currFeatures, prevFeatures, focal, pp, cv::RANSAC, 0.999, 1.0, mask);
         recoverPose(E, currFeatures, prevFeatures, R, t, focal, pp, mask);
-
-        cv::Mat prevPts(2,prevFeatures.size(), CV_64F), currPts(2,currFeatures.size(), CV_64F);
-
-        // convert the feature points from the vector<Point2f> format to the cv::Mat format
-        for(int i=0; i<prevFeatures.size(); i++){
-            prevPts.at<double>(0,i) = prevFeatures.at(i).x;
-            prevPts.at<double>(1,i) = prevFeatures.at(i).y;
-
-            currPts.at<double>(0,i) = currFeatures.at(i).x;
-            currPts.at<double>(1,i) = currFeatures.at(i).y;
-        }
 
         double gps_distance = getAbsoluteScale(numFrame, oxts_data);
         double scale = gps_distance / cv::norm(t);
@@ -111,6 +110,8 @@ int main(){
         else {
             // cout << "Scale calculation failed..." << endl;
         }
+
+        estimated_trajectory.emplace_back(t_f.at<double>(0), t_f.at<double>(1), t_f.at<double>(2));
 
         // redetection if the number of features is below the threshold
         if(prevFeatures.size() < MIN_NUM_FEAT){
@@ -133,6 +134,8 @@ int main(){
         int y_true_int = int(z_true) + 100;
         cv::circle(traj, cv::Point(x_true_int, y_true_int), 1, CV_RGB(0, 255, 0), 1.5);
 
+        ground_truth_trajectory.emplace_back(x_true, y_true, z_true);
+
         // Display coordinates
         cv::rectangle(traj, cv::Point(10, 30), cv::Point(800, 70), CV_RGB(0, 0, 0), cv::FILLED);
         sprintf(text, "Coordinates: x = %02fm y = %02fm z = %02fm", t_f.at<double>(0), t_f.at<double>(1), t_f.at<double>(2));
@@ -152,10 +155,14 @@ int main(){
         cv::imshow( "Trajectory", traj );
 
         cv::waitKey(1);
+        numFrame++;
     }
 
     // Save the trajectory as a PNG file
     cv::imwrite("../trajectory.png", traj);
+
+    double ate = calculateATE(estimated_trajectory, ground_truth_trajectory);
+    std::cout << "Absolute Trajectory Error: " << ate << " meters" << std::endl;
 
     clock_t end = clock();
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
