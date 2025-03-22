@@ -66,7 +66,7 @@ docker run --rm -it \
 
 4. (Optional) Restore security after running Docker
 ```sh
-xhost -local:root
+xhost -local:docker
 ```
 
 ## Results
